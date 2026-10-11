@@ -1,4 +1,4 @@
-using OpenClip;
+using Cliptray;
 var older = new ClipItem("older", DateTime.UnixEpoch, "match older", false);
 var newer = new ClipItem("newer", DateTime.UnixEpoch.AddMinutes(1), "match newer", false);
 var beforeCapture = ClipListProjection.Build(new[] { newer, older }, " match ");

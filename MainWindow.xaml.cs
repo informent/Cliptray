@@ -2,7 +2,7 @@ using System.Windows;
 using System.Windows.Threading;
 using Forms = System.Windows.Forms;
 using StackPanel = System.Windows.Controls.StackPanel;
-namespace OpenClip;
+namespace Cliptray;
 public partial class MainWindow : Window
 {
     private readonly ClipStore store = new(); private readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromMilliseconds(700) }; private ClipItem? selected; private string lastClipboard = ""; private bool capturePaused;
@@ -30,7 +30,7 @@ public partial class MainWindow : Window
     private void Pin_Click(object sender, RoutedEventArgs e) { if (selected is not null && store.TogglePin(selected.Id)) { Refresh(); StatusText("Pin updated"); } }
     private void Clear_Click(object sender, RoutedEventArgs e) { var removed = store.RemoveUnpinned(); selected = null; Refresh(); StatusText($"Removed {removed} unpinned items"); }
     private void Pause_Click(object sender, RoutedEventArgs e) { capturePaused = !capturePaused; if (sender is System.Windows.Controls.Button button) button.Content = capturePaused ? "Resume capture" : "Pause capture"; StatusText(capturePaused ? "Capture paused" : "Capture active"); }
-    private void Wipe_Click(object sender, RoutedEventArgs e) { var result = System.Windows.MessageBox.Show("Clear all unpinned clipboard history? Pinned items will remain.", "OpenClip privacy", MessageBoxButton.YesNo, MessageBoxImage.Warning); if (result == MessageBoxResult.Yes) { var removed = store.ClearAll(true); selected = null; Refresh(); StatusText($"Cleared {removed} unpinned items"); } }
+    private void Wipe_Click(object sender, RoutedEventArgs e) { var result = System.Windows.MessageBox.Show("Clear all unpinned clipboard history? Pinned items will remain.", "Cliptray privacy", MessageBoxButton.YesNo, MessageBoxImage.Warning); if (result == MessageBoxResult.Yes) { var removed = store.ClearAll(true); selected = null; Refresh(); StatusText($"Cleared {removed} unpinned items"); } }
     private void Copy_Click(object sender, RoutedEventArgs e) { if (selected is null) return; Forms.Clipboard.SetText(selected.Text); StatusText("Copied to clipboard"); }
-    private void StatusText(string text) => Title = $"OpenClip  ·  {text}";
+    private void StatusText(string text) => Title = $"Cliptray  ·  {text}";
 }

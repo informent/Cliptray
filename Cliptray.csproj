@@ -6,11 +6,11 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>1.2.0</Version>
+    <Version>1.2.1</Version>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <EnableDefaultPageItems>false</EnableDefaultPageItems>
     <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
-  </PropertyGroup>
+  <Product>Cliptray</Product><Title>Cliptray</Title><Company>informent</Company></PropertyGroup>
   <ItemGroup>
     <Compile Include="App.xaml.cs;MainWindow.xaml.cs;ClipStore.cs" />
     <ApplicationDefinition Include="App.xaml" />
