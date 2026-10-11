@@ -4,7 +4,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-namespace OpenClip;
+namespace Cliptray;
 
 public sealed record ClipItem(string Id, DateTime CapturedAt, string Text, bool IsPinned);
 public sealed record ClipListRow(ClipItem Item, string DisplayText)
@@ -95,7 +95,7 @@ public sealed class ClipStore : IDisposable
         try
         {
             try { acquired = mutex.WaitOne(TimeSpan.FromSeconds(5)); } catch (AbandonedMutexException) { acquired = true; }
-            if (!acquired) throw new IOException("Clipboard history is busy in another OpenClip process.");
+            if (!acquired) throw new IOException("Clipboard history is busy in another Cliptray process.");
             return action();
         }
         finally { if (acquired) mutex.ReleaseMutex(); }
