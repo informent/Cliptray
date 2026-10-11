@@ -24,7 +24,7 @@ public partial class MainWindow : Window
     {
         if (ClipList.SelectedItem is not ClipListRow row) { selected = null; return; }
         selected = row.Item;
-        SelectedMeta.Text = $"{(selected.IsPinned ? "Pinned Â· " : "")}{selected.CapturedAt:dddd, MMM d Â· h:mm tt}";
+        SelectedMeta.Text = $"{(selected.IsPinned ? "Pinned · " : "")}{selected.CapturedAt:dddd, MMM d · h:mm tt}";
         PreviewText.Text = selected.Text;
     }
     private void Pin_Click(object sender, RoutedEventArgs e) { if (selected is not null && store.TogglePin(selected.Id)) { Refresh(); StatusText("Pin updated"); } }
@@ -32,5 +32,5 @@ public partial class MainWindow : Window
     private void Pause_Click(object sender, RoutedEventArgs e) { capturePaused = !capturePaused; if (sender is System.Windows.Controls.Button button) button.Content = capturePaused ? "Resume capture" : "Pause capture"; StatusText(capturePaused ? "Capture paused" : "Capture active"); }
     private void Wipe_Click(object sender, RoutedEventArgs e) { var result = System.Windows.MessageBox.Show("Clear all unpinned clipboard history? Pinned items will remain.", "Cliptray privacy", MessageBoxButton.YesNo, MessageBoxImage.Warning); if (result == MessageBoxResult.Yes) { var removed = store.ClearAll(true); selected = null; Refresh(); StatusText($"Cleared {removed} unpinned items"); } }
     private void Copy_Click(object sender, RoutedEventArgs e) { if (selected is null) return; Forms.Clipboard.SetText(selected.Text); StatusText("Copied to clipboard"); }
-    private void StatusText(string text) => Title = $"Cliptray  Â·  {text}";
+    private void StatusText(string text) => Title = $"Cliptray  ·  {text}";
 }

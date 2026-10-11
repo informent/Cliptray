@@ -20,12 +20,12 @@ Existing settings and data locations retain the OpenClip folder name for compati
 
 Windows setup packages install Cliptray for your current account, bundle the .NET runtime, create a Start menu shortcut and register an uninstaller. A desktop shortcut is optional. No administrator password or manual file copying is required. Existing settings and saved data stay in their current locations. The portable ZIP remains available.
 
-Installer builds are being validated in the **Automatic setup** workflow. Once published, download `Cliptray-vVERSION-setup.exe` from Releases and run it.
+Download `Cliptray-v1.3.1-setup.exe` from Releases and run it.
 
 For unattended deployment:
 
 ```powershell
-Start-Process .\Cliptray-vVERSION-setup.exe -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-' -Wait -PassThru
+Start-Process .\Cliptray-v1.3.1-setup.exe -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-' -Wait -PassThru
 ```
 
 Build from source with the [open-source Inno Setup compiler](https://github.com/jrsoftware/issrc) installed:
