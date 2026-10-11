@@ -11,7 +11,7 @@ jobs:
         with: { dotnet-version: 10.0.x }
       - run: dotnet run --project tests/ClipStoreTests.csproj --nologo
       - run: dotnet build Cliptray.csproj --configuration Release --nologo
-      - run: pwsh -File tests/Test-Release.ps1
+      - run: pwsh -File tests/Test-Release.ps1 -KeepArtifact
       - name: Verify product branding
         shell: pwsh
         run: |

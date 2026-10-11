@@ -1,6 +1,7 @@
+param([switch]$KeepArtifact)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
-$out = Join-Path $root ('test-output-' + [Guid]::NewGuid().ToString('N'))
+$out = if ($KeepArtifact) { Join-Path $root 'test-output' } else { Join-Path $root ('test-output-' + [Guid]::NewGuid().ToString('N')) }
 $p = $null
 try {
     dotnet publish (Join-Path $root 'Cliptray.csproj') -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o $out --nologo | Out-Host
@@ -10,7 +11,7 @@ try {
 }
 finally {
     if ($null -ne $p -and !$p.HasExited) { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue; Wait-Process -Id $p.Id -ErrorAction SilentlyContinue }
-    for ($attempt = 0; $attempt -lt 25 -and (Test-Path -LiteralPath $out); $attempt++) {
+    for ($attempt = 0; !$KeepArtifact -and $attempt -lt 25 -and (Test-Path -LiteralPath $out); $attempt++) {
         try { Remove-Item -LiteralPath $out -Recurse -Force -ErrorAction Stop }
         catch { if ($attempt -eq 24) { throw }; Start-Sleep -Milliseconds 200 }
     }
