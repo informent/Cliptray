@@ -51,6 +51,15 @@ try
     try { bounded.ClearAll(false); throw new Exception("Recovery purge failure reported success."); } catch (UnauthorizedAccessException) { } catch (IOException) { }
     if (!File.ReadAllBytes(boundedPath).SequenceEqual(beforeFailedClear)) throw new Exception("Failed privacy clear changed the primary history.");
     Directory.Delete(boundedPath + ".bak");
-    Console.WriteLine("PASS: text limits, expanded secret detection, pinned capacity, selected deletion, concurrent history, malformed rows, and privacy failure handling");
+    var largeEntries = Enumerable.Range(0, 131).Select(i => new ClipItem("bulk-" + i, DateTime.UtcNow, i.ToString("D3") + new string('x', 65_530), i == 130)).ToArray();
+    File.WriteAllText(boundedPath, System.Text.Json.JsonSerializer.Serialize(largeEntries));
+    using var byteBounded = new ClipStore(boundedPath);
+    byteBounded.Load();
+    if (byteBounded.Items.Sum(x => (long)System.Text.Encoding.UTF8.GetByteCount(x.Text)) > ClipStore.MaxHistoryTextBytes || byteBounded.Items.All(x => x.Id != "bulk-130")) throw new Exception("History text budget failed to protect pins.");
+    File.WriteAllText(boundedPath + ".bak", System.Text.Json.JsonSerializer.Serialize(new[] { new ClipItem("recovery", DateTime.UtcNow, "safe history", false) }));
+    using (var oversized = new FileStream(boundedPath, FileMode.Create)) oversized.SetLength(64L * 1024 * 1024 + 1);
+    byteBounded.Load();
+    if (byteBounded.Items.Count != 1 || byteBounded.Items[0].Id != "recovery") throw new Exception("Oversized database did not use bounded recovery.");
+    Console.WriteLine("PASS: text and database limits, expanded secret detection, pinned capacity, selected deletion, concurrent history, malformed rows, and privacy failure handling");
 }
 finally { Directory.Delete(boundedRoot, true); }
