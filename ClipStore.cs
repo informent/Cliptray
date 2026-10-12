@@ -69,17 +69,23 @@ public sealed class ClipStore : IDisposable
     public static bool IsSensitive(string text)
     {
         if (string.IsNullOrWhiteSpace(text)) return false;
+        try
+        {
         if (Regex.IsMatch(text, @"-----BEGIN (?:RSA |EC |DSA |OPENSSH |ENCRYPTED |PGP )?PRIVATE KEY(?: BLOCK)?-----", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100))) return true;
         if (Regex.IsMatch(text, @"(?im)^\s*(?:export\s+)?[\""' ]*(password|passwd|pwd|api[_-]?key|secret|access[_-]?token)[\""' ]*\s*[:=]\s*\S+", RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100))) return true;
         foreach (Match match in Regex.Matches(text, @"(?<!\d)(?:\d[ -]?){13,19}(?!\d)")) { var digits = new string(match.Value.Where(char.IsDigit).ToArray()); if (digits.Length is >= 13 and <= 19 && PassesLuhn(digits)) return true; }
         return false;
+        }
+        catch (RegexMatchTimeoutException) { return true; }
     }
 
     public void Dispose() => mutex.Dispose();
 
     private void LoadUnlocked()
     {
-        Items = TryRead(path) ?? TryRead(path + ".bak") ?? new();
+        var loaded = TryRead(path) ?? TryRead(path + ".bak");
+        if (loaded is null && (File.Exists(path) || File.Exists(path + ".bak"))) throw new InvalidDataException("Clipboard history cannot be read safely. Existing files have been preserved.");
+        Items = loaded ?? new();
         Items = Items.Where(IsValid).GroupBy(x => x.Id, StringComparer.Ordinal).Select(x => x.First()).ToList(); ApplyLimit();
     }
     private void SaveUnlocked(bool preserveRecovery = true)

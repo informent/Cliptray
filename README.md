@@ -12,7 +12,7 @@ Version 1.2 binds history rows to stable clip identities, so adding a new clip o
 
 Use **Delete selected** to remove one clip, including a pinned clip, without clearing the rest of your history. Selection stays attached to the clip identity when another instance adds history. Deletion and clearing remove the recovery copy before reporting success; an inaccessible recovery file leaves the primary history unchanged and reports the failure.
 
-New captures are limited to 65,536 characters, 500 items, and 8 MiB of UTF-8 text. Old unpinned clips make room first. Pinned clips are preserved, and an entry that cannot fit is rejected. Existing pinned data is preserved even when it exceeds a limit. Database reads above 64 MiB are refused and recovery is attempted. Null or invalid rows are ignored safely.
+New captures are limited to 65,536 characters, 500 items, and 8 MiB of UTF-8 text. Old unpinned clips make room first. Pinned clips are preserved, and an entry that cannot fit is rejected. Existing pinned data is preserved even when it exceeds a limit. Database reads above 64 MiB are refused and recovery is attempted. Null or invalid rows are ignored safely. If neither history file can be read, capture pauses and existing files are preserved for recovery.
 
 Secret exclusion also recognizes RSA, EC, DSA, encrypted and PGP private-key blocks, shell secret assignments, and quoted secret keys. Detection is best effort; pause capture before handling confidential text. Clipboard history remains local plaintext and is not encrypted at rest.
 

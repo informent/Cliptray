@@ -60,6 +60,10 @@ try
     using (var oversized = new FileStream(boundedPath, FileMode.Create)) oversized.SetLength(64L * 1024 * 1024 + 1);
     byteBounded.Load();
     if (byteBounded.Items.Count != 1 || byteBounded.Items[0].Id != "recovery") throw new Exception("Oversized database did not use bounded recovery.");
-    Console.WriteLine("PASS: text and database limits, expanded secret detection, pinned capacity, selected deletion, concurrent history, malformed rows, and privacy failure handling");
+    File.Delete(boundedPath + ".bak");
+    try { byteBounded.Add("must not erase unreadable history"); throw new Exception("Unreadable database was overwritten."); } catch (InvalidDataException) { }
+    if (new FileInfo(boundedPath).Length != 64L * 1024 * 1024 + 1) throw new Exception("Unreadable history bytes changed.");
+    ClipStore.IsSensitive(new string('\n', 60_000) + "x");
+    Console.WriteLine("PASS: unreadable-history preservation, text and database limits, expanded secret detection, pinned capacity, selected deletion, concurrent history, malformed rows, and privacy failure handling");
 }
 finally { Directory.Delete(boundedRoot, true); }
