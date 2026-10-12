@@ -25,3 +25,32 @@ Directory.Delete(secureRoot, true); Console.WriteLine("PASS: sensitive-content e
 var sharedRoot = Path.Combine(Path.GetTempPath(), "openclip-shared-" + Guid.NewGuid().ToString("N")); var sharedPath = Path.Combine(sharedRoot, "clips.json"); using var firstStore = new ClipStore(sharedPath); using var secondStore = new ClipStore(sharedPath); firstStore.Load(); secondStore.Load(); firstStore.Add("from first process"); secondStore.Add("from second process"); using var combined = new ClipStore(sharedPath); combined.Load();
 if (combined.Items.Count != 2 || combined.Items.All(x => x.Text != "from first process") || combined.Items.All(x => x.Text != "from second process")) throw new Exception("Multi-instance save lost clipboard history.");
 Directory.Delete(sharedRoot, true); Console.WriteLine("PASS: serialized multi-instance mutations preserve both histories");
+
+var boundedRoot = Path.Combine(Path.GetTempPath(), "cliptray-bounded-" + Guid.NewGuid().ToString("N"));
+var boundedPath = Path.Combine(boundedRoot, "clips.json");
+try
+{
+    using var bounded = new ClipStore(boundedPath, 2);
+    if (bounded.Add(new string('x', ClipStore.MaxTextLength + 1)) || File.Exists(boundedPath)) throw new Exception("Oversized text reached disk.");
+    foreach (var secret in new[] { "-----BEGIN RSA PRIVATE KEY-----", "-----BEGIN EC PRIVATE KEY-----", "-----BEGIN PGP PRIVATE KEY BLOCK-----", "export API_KEY=private", "\"password\": \"private\"" })
+        if (bounded.Add(secret)) throw new Exception("Common secret format was persisted.");
+    bounded.Add("pinned one"); bounded.TogglePin(bounded.Items[0].Id);
+    bounded.Add("pinned two"); bounded.TogglePin(bounded.Items[0].Id);
+    if (bounded.Add("cannot fit") || bounded.Items.Count != 2 || bounded.Items.Any(x => !x.IsPinned)) throw new Exception("Pinned capacity was not respected.");
+    var removeId = bounded.Items[0].Id;
+    if (!bounded.Remove(removeId) || bounded.Items.Any(x => x.Id == removeId) || File.Exists(boundedPath + ".bak") || bounded.Remove("missing")) throw new Exception("Selected deletion or recovery purge failed.");
+    using var other = new ClipStore(boundedPath, 2); other.Add("from other process");
+    bounded.Remove(bounded.Items[0].Id); other.Load();
+    if (other.Items.Count != 1 || other.Items[0].Text != "from other process") throw new Exception("Selected deletion lost concurrent history.");
+    File.WriteAllText(boundedPath, "[null,{\"Id\":\"ok\",\"Text\":\"valid\",\"IsPinned\":false}]");
+    bounded.Load(); if (bounded.Items.Count != 1 || bounded.Items[0].Id != "ok") throw new Exception("Null history row recovery failed.");
+    bounded.Add("second");
+    Directory.CreateDirectory(boundedPath + ".bak-blocked");
+    File.Delete(boundedPath + ".bak"); Directory.Move(boundedPath + ".bak-blocked", boundedPath + ".bak");
+    var beforeFailedClear = File.ReadAllBytes(boundedPath);
+    try { bounded.ClearAll(false); throw new Exception("Recovery purge failure reported success."); } catch (UnauthorizedAccessException) { } catch (IOException) { }
+    if (!File.ReadAllBytes(boundedPath).SequenceEqual(beforeFailedClear)) throw new Exception("Failed privacy clear changed the primary history.");
+    Directory.Delete(boundedPath + ".bak");
+    Console.WriteLine("PASS: text limits, expanded secret detection, pinned capacity, selected deletion, concurrent history, malformed rows, and privacy failure handling");
+}
+finally { Directory.Delete(boundedRoot, true); }
