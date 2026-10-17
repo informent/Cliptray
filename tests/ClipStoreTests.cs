@@ -1,4 +1,11 @@
 using Cliptray;
+var settingsRoot = Path.Combine(Path.GetTempPath(), "cliptray-settings-" + Guid.NewGuid().ToString("N")); var settingsPath = Path.Combine(settingsRoot, "clips.json");
+using (var settings = new ClipStore(settingsPath)) { if (settings.CaptureEnabled) throw new Exception("Clipboard capture was enabled without explicit consent."); settings.CaptureEnabled = true; }
+using (var settingsReloaded = new ClipStore(settingsPath)) { if (!settingsReloaded.CaptureEnabled) throw new Exception("Capture preference did not persist."); }
+File.WriteAllText(settingsPath + ".settings.json", "{ damaged json");
+using (var damagedSettings = new ClipStore(settingsPath)) { if (damagedSettings.CaptureEnabled) throw new Exception("Damaged capture preference did not fall back to off."); damagedSettings.CaptureEnabled = false; }
+Directory.Delete(settingsRoot, true);
+Console.WriteLine("PASS: capture defaults off, explicit choice persists, and damaged settings fail closed");
 var older = new ClipItem("older", DateTime.UnixEpoch, "match older", false);
 var newer = new ClipItem("newer", DateTime.UnixEpoch.AddMinutes(1), "match newer", false);
 var beforeCapture = ClipListProjection.Build(new[] { newer, older }, " match ");

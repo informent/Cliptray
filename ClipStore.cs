@@ -34,12 +34,14 @@ public sealed class ClipStore : IDisposable
     private readonly string path;
     private readonly int maxItems;
     private readonly Mutex mutex;
+    private readonly string settingsPath;
     public List<ClipItem> Items { get; private set; } = new();
 
     public ClipStore(string? storagePath = null, int maxItems = 500)
     {
         if (maxItems < 1) throw new ArgumentOutOfRangeException(nameof(maxItems));
         path = Path.GetFullPath(storagePath ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OpenClip", "clips.json"));
+        settingsPath = path + ".settings.json";
         this.maxItems = maxItems;
         var identity = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(path.ToUpperInvariant())))[..24];
         mutex = new Mutex(false, $@"Local\OpenClip-{identity}");
@@ -47,6 +49,12 @@ public sealed class ClipStore : IDisposable
 
     public void Load() => WithLock(LoadUnlocked);
     public void Save() => WithLock(() => SaveUnlocked());
+
+    public bool CaptureEnabled
+    {
+        get => WithLock(ReadCaptureEnabled);
+        set => WithLock(() => WriteCaptureEnabled(value));
+    }
 
     public bool Add(string text)
     {
@@ -135,6 +143,29 @@ public sealed class ClipStore : IDisposable
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException) { return null; }
     }
     private void DeleteRecoveryCopy() => File.Delete(path + ".bak");
+    private bool ReadCaptureEnabled()
+    {
+        try
+        {
+            if (!File.Exists(settingsPath)) return false;
+            using var document = JsonDocument.Parse(File.ReadAllText(settingsPath));
+            return document.RootElement.TryGetProperty("captureEnabled", out var value) && value.ValueKind == JsonValueKind.True;
+        }
+        catch { return false; }
+    }
+    private void WriteCaptureEnabled(bool enabled)
+    {
+        var directory = Path.GetDirectoryName(settingsPath)!;
+        Directory.CreateDirectory(directory);
+        var temporary = settingsPath + ".tmp-" + Guid.NewGuid().ToString("N");
+        try
+        {
+            File.WriteAllText(temporary, JsonSerializer.Serialize(new { captureEnabled = enabled }, JsonOptions));
+            using (var stream = new FileStream(temporary, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.WriteThrough)) stream.Flush(true);
+            File.Move(temporary, settingsPath, true);
+        }
+        finally { if (File.Exists(temporary)) File.Delete(temporary); }
+    }
     private static bool IsValid(ClipItem? item) => item is not null && !string.IsNullOrWhiteSpace(item.Id) && item.Id.Length <= 128 && !string.IsNullOrWhiteSpace(item.Text) && item.Text.Length <= MaxTextLength && !IsSensitive(item.Text);
     private static bool PassesLuhn(string digits) { var sum = 0; var alternate = false; for (var i = digits.Length - 1; i >= 0; i--) { var value = digits[i] - '0'; if (alternate && (value *= 2) > 9) value -= 9; sum += value; alternate = !alternate; } return sum % 10 == 0; }
 }

@@ -16,6 +16,10 @@ New captures are limited to 65,536 characters, 500 items, and 8 MiB of UTF-8 tex
 
 Secret exclusion also recognizes RSA, EC, DSA, encrypted and PGP private-key blocks, shell secret assignments, and quoted secret keys. Detection is best effort; pause capture before handling confidential text. Clipboard history remains local plaintext and is not encrypted at rest.
 
+## Capture consent in 1.5
+
+Clipboard capture starts off unless enabled in the window. The preference persists across restarts, and missing or unreadable settings default to off. The existing Pause capture control remains available for a temporary pause.
+
 MIT licensed.
 
 ## Name change
@@ -28,12 +32,12 @@ Existing settings and data locations retain the OpenClip folder name for compati
 
 Windows setup packages install Cliptray for your current account, bundle the .NET runtime, create a Start menu shortcut and register an uninstaller. A desktop shortcut is optional. No administrator password or manual file copying is required. Existing settings and saved data stay in their current locations. The portable ZIP remains available.
 
-Download `Cliptray-v1.4.0-setup.exe` from Releases and run it.
+Download `Cliptray-v1.5.0-setup.exe` from Releases and run it.
 
 For unattended deployment:
 
 ```powershell
-Start-Process .\Cliptray-v1.4.0-setup.exe -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-' -Wait -PassThru
+Start-Process .\Cliptray-v1.5.0-setup.exe -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-' -Wait -PassThru
 ```
 
 Build from source with the [open-source Inno Setup compiler](https://github.com/jrsoftware/issrc) installed:
