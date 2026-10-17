@@ -16,6 +16,8 @@ New captures are limited to 65,536 characters, 500 items, and 8 MiB of UTF-8 tex
 
 Secret exclusion also recognizes RSA, EC, DSA, encrypted and PGP private-key blocks, shell secret assignments, and quoted secret keys. Detection is best effort; pause capture before handling confidential text. Clipboard history remains local plaintext and is not encrypted at rest.
 
+Clipboard capture now starts off unless enabled in the window. The preference persists across restarts, and a missing or unreadable preference defaults to off. The existing Pause capture control remains available for a temporary pause.
+
 MIT licensed.
 
 ## Name change
